@@ -1,0 +1,21 @@
+{ 
+"id": "b957d66f-b3cb-4d6c-9756-41a55258e0c5", 
+"title": "Inception",
+"duration": 148, 
+"genres": ["Sci-Fi","thriller"], 
+"posterUrl": "https://example.com/poster.jpg"
+}
+
+{ 
+"id": "45bfe58a-c9ba-44b6-911e-c1387f6e1ace",
+"movieId": "b957d66f-b3cb-4d6c-9756-41a55258e0c5",
+"room": "Room 2",
+"startTime": "2025-07-13T14:30:00Z",
+  "standardVisitors": 50,
+  "discountVisitors": 10,
+  "seats": [
+    {
+      "Room": "Room 2",
+      "Number": 10
+    }]
+}

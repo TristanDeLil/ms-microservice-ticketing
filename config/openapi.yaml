@@ -1,0 +1,414 @@
+openapi: 3.0.0
+info:
+  title: Microservice Ticketing API  
+  version: 1.1.0
+servers:  
+  - url: http://localhost:8000
+    description: Dev server    
+  - url: http://localhost:40230
+    description: Dev server    
+  - url: https://howestprime-ticketing.politeisland-a3c3d2aa.northeurope.azurecontainerapps.io
+    description: Production
+tags:
+  - name: Orders
+    description: Operations related to orders
+  - name: Tickets
+    description: Operations related to tickets
+  - name: Payments
+    description: Operations related to payments
+
+paths:
+  /api/orders/{orderId}:
+    get:
+      tags:
+        - Orders
+        - Tickets
+      summary: Get order by ID
+      description: Retrieve the details of an order by its unique identifier.
+      operationId: GetOrderById
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Successful response with order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                example-1:
+                  $ref: '#/components/examples/OrderExample1'
+                example-2:
+                  $ref: '#/components/examples/OrderExample2'
+                example-3:
+                  $ref: '#/components/examples/OrderExample3'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example-1:
+                  $ref: '#/components/examples/ErrorResponseExample1'
+                example-2:
+                  $ref: '#/components/examples/ErrorResponseExample2'
+                example-3:
+                  $ref: '#/components/examples/ErrorResponseExample3'
+  /api/orders:
+    post:
+      tags:
+        - Orders
+      summary: Create Order
+      description: Create a new order with the provided details.
+      operationId: CreateOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderBody'
+            examples:
+              example-1:
+                $ref: '#/components/examples/CreateOrderExample1'
+              example-2:
+                $ref: '#/components/examples/CreateOrderExample2'
+              example-3:
+                $ref: '#/components/examples/CreateOrderExample3'
+      responses:
+        '201':
+          description: Order created successfully
+          headers:
+            LocationOrder:
+              $ref: '#/components/headers/LocationOrder'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example-1:
+                  $ref: '#/components/examples/ErrorResponseExample1'
+                example-2:
+                  $ref: '#/components/examples/ErrorResponseExample2'
+                example-3:
+                  $ref: '#/components/examples/ErrorResponseExample3'
+  /api/orders/{orderId}/payments:
+    post:
+      tags:
+        - Payments
+      summary: Pay for an order
+      description: Process a payment for an order using the provided payment details.
+      operationId: PayOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayOrderRequestBody'
+            examples:
+              example-1:
+                $ref: '#/components/examples/PaymentRequestExample1'
+              example-2:
+                $ref: '#/components/examples/PaymentRequestExample2'
+              example-3:
+                $ref: '#/components/examples/PaymentRequestExample3'
+      responses:
+        '201':
+          description: Payment processed successfully
+          headers:
+            LocationPayment:
+              $ref: '#/components/headers/LocationPayment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example-1:
+                  $ref: '#/components/examples/ErrorResponseExample1'
+                example-2:
+                  $ref: '#/components/examples/ErrorResponseExample2'
+                example-3:
+                  $ref: '#/components/examples/ErrorResponseExample3'
+
+components:
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+      description: The ID of the order
+
+  headers:
+    LocationOrder:
+      description: URL of the created order
+      schema:
+        type: string
+        format: uri
+      example: "/orders/123e4567-e89b-12d3-a456-426614174000"
+    LocationPayment:
+      description: URL of the created payment
+      schema:
+        type: string
+        format: uri
+      example: "/api/orders/123e4567-e89b-12d3-a456-426614174000/payments/456e7890-e12b-34c5-d678-901234567890"
+
+  schemas:
+    CreateOrderBody:
+      type: object
+      properties:
+        bookingId:
+          $ref: '#/components/schemas/UUID'
+          description: Unique identifier for the booking
+        customer:
+          $ref: '#/components/schemas/Customer'
+          description: Customer details for the order    
+    Order:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Unique identifier for the order
+        customer:
+          $ref: '#/components/schemas/Customer'
+          description: Customer details for the order
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ticket'
+          description: List of tickets in the order        
+        price:
+          type: number
+          description: Total price of the order
+          minimum: 0 
+    Ticket:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Unique identifier for the ticket        
+        price:
+          type: number
+          description: Price of the ticket
+          minimum: 0
+        movie:
+          $ref: '#/components/schemas/Movie'
+          description: Movie details associated with the ticket
+        seat:
+          $ref: '#/components/schemas/Seat'
+          description: Seat details associated with the ticket
+        date:
+          type: string
+          format: date-time
+          description: Date and time of the movie
+        pauseTreshold:
+          type: number
+          description: Pause threshold for the movie
+          minimum: 0
+    Seat:
+      type: object
+      properties:
+        room:
+          type: string
+          description: Room where the seat is located
+          minLength: 1
+          maxLength: 50
+        row:
+          type: number
+          description: Row number of the seat
+          minimum: 1
+
+    Movie:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Unique identifier for the movie
+        image: 
+          type: string
+          description: URL of the movie poster
+        title:
+          type: string
+          description: Title of the movie
+          minLength: 1
+          maxLength: 100
+        duration:
+          type: number
+          description: Duration of the movie in minutes
+          minimum: 1
+        genres:
+          type: array
+          items:
+            type: string
+          description: List of genres for the movie   
+    Customer:
+      type: object
+      required:
+        - salutation
+        - firstname
+        - lastname
+        - email
+      properties:
+        salutation:
+          type: string
+          description: Salutation of the customer (e.g., Mr., Mrs., Ms.)
+          example: "Mr."
+        firstname:
+          type: string
+          description: First name of the customer
+          example: "John"
+        lastname:
+          type: string
+          description: Last name of the customer
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          description: Email address of the customer
+          example: "john.doe@example.com"
+
+    PayOrderRequestBody:
+      type: object
+      required:
+        - paymentMethod
+        - cardNumber
+        - expiryDate
+        - cvv
+        - amount
+      properties:
+        paymentMethod:
+          type: string
+          enum: ["Credit Card", "Bank Transfer"]
+          description: Method of payment for the order
+        cardNumber:
+          type: string
+          description: Credit card number
+          minLength: 16
+          maxLength: 16
+        expiryDate:
+          type: string
+          description: Expiry date of the credit card
+          pattern: '^(0[1-9]|1[0-2])\/?([0-9]{2})$'
+        cvv:
+          type: string
+          description: CVV code of the credit card
+          minLength: 3
+          maxLength: 4
+        amount:
+          type: number
+          description: Amount to be paid
+          minimum: 0
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+    UUID:
+      type: string
+      format: uuid
+      description: A universally unique identifier (UUID)
+
+  examples:
+    OrderExample1:
+      value:
+        id: "123e4567-e89b-12d3-a456-426614174000"
+        bookingId: "123e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Mr."
+          firstname: "John"
+          lastname: "Doe"
+          email: "john.doe@example.com"
+        items:
+          - id: "123e4567-e89b-12d3-a456-426614174002"
+            price: 10.0
+        price: 10.0
+    OrderExample2:
+      value:
+        id: "223e4567-e89b-12d3-a456-426614174000"
+        bookingId: "223e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Mrs."
+          firstname: "Jane"
+          lastname: "Smith"
+          email: "jane.smith@example.com"
+        items:
+          - id: "223e4567-e89b-12d3-a456-426614174002"
+            price: 20.0
+        price: 20.0
+    OrderExample3:
+      value:
+        id: "323e4567-e89b-12d3-a456-426614174000"
+        bookingId: "323e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Ms."
+          firstname: "Emily"
+          lastname: "Johnson"
+          email: "emily.johnson@example.com"
+        items:
+          - id: "323e4567-e89b-12d3-a456-426614174002"
+            price: 15.0
+        price: 15.0
+    PaymentRequestExample1:
+      value:
+        paymentMethod: "Credit Card"
+        cardNumber: "4111111111111111"
+        expiryDate: "12/23"
+        cvv: "123"
+        amount: 10.0
+    PaymentRequestExample2:
+      value:
+        paymentMethod: "Bank Transfer"
+        cardNumber: "4222222222222222"
+        expiryDate: "11/24"
+        cvv: "456"
+        amount: 20.0
+    PaymentRequestExample3:
+      value:
+        paymentMethod: "Credit Card"
+        cardNumber: "4333333333333333"
+        expiryDate: "10/25"
+        cvv: "789"
+        amount: 15.0
+
+    CreateOrderExample1:
+      value:
+        bookingId: "123e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Mr."
+          firstname: "John"
+          lastname: "Doe"
+          email: "john.doe@example.com"
+    CreateOrderExample2:
+      value:
+        bookingId: "223e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Mrs."
+          firstname: "Jane"
+          lastname: "Smith"
+          email: "jane.smith@example.com"
+    CreateOrderExample3:
+      value:
+        bookingId: "323e4567-e89b-12d3-a456-426614174001"
+        customer:
+          salutation: "Ms."
+          firstname: "Emily"
+          lastname: "Johnson"
+          email: "emily.johnson@example.com"
+
+    ErrorResponseExample1:
+      value:
+        message: "Invalid input data"
+    ErrorResponseExample2:
+      value:
+        message: "Order not found"
+    ErrorResponseExample3:
+      value:
+        message: "Payment processing failed"

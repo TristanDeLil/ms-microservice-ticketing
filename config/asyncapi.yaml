@@ -1,0 +1,281 @@
+asyncapi: 3.0.0
+info:
+  title: Howestprime.Ticketing
+  version: 1.0.0
+  description: |
+    This AsyncAPI specification describes the message broker configuration
+    for the Howestprime.Ticketing SAAS.
+  
+defaultContentType: application/json
+
+servers:
+  messageBroker:
+    host: "{host}"
+    protocol: amqp
+    description: Local AMQP message broker
+    bindings:
+      amqp:
+        virtualHost: /
+channels:
+  howestprime.movies.MovieRegistered:
+    messages:
+      MovieRegistered:
+        $ref: '#/components/messages/MovieRegistered'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: howestprime
+          type: topic
+          routingKey: howestprime.movies.MovieRegistered
+
+  howestprime.movies.MovieDetailsChanged:
+    messages:
+      MovieDetailsChanged:
+        $ref: '#/components/messages/MovieDetailsChanged'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: howestprime
+          type: topic
+          routingKey: howestprime.movies.MovieDetailsChanged
+
+  howestprime.movies.BookingOpened:
+    messages:
+      BookingOpened:
+        $ref: '#/components/messages/BookingOpened'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: howestprime
+          type: topic
+          routingKey: howestprime.movies.BookingOpened
+
+  howestprime.ticketing.PaymentSuccess:
+    messages:
+      PaymentSuccess:
+        $ref: '#/components/messages/PaymentSuccess'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: howestprime
+          type: topic
+          routingKey: howestprime.ticketing.PaymentSuccess
+
+  howestprime.ticketing.PaymentFailed:
+    messages:
+      PaymentFailed:
+        $ref: '#/components/messages/PaymentFailed'
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: howestprime
+          type: topic
+          routingKey: howestprime.ticketing.PaymentFailed
+
+operations:
+  SaveMovieWhenMovieRegistered:
+    action: receive
+    channel:
+      $ref: '#/channels/howestprime.movies.MovieRegistered'
+    description: |
+      This operation is triggered when a new movie is registered.
+      It saves the movie information to the database.
+    messages:
+      - $ref: '#/channels/howestprime.movies.MovieRegistered/messages/MovieRegistered'
+
+  SaveMovieWhenMovieDetailsChanged:
+    action: receive
+    channel:
+      $ref: '#/channels/howestprime.movies.MovieDetailsChanged'
+    description: |
+      This operation is triggered when a new movie details are changed.
+      It saves the movie information to the database.
+    messages:
+      - $ref: '#/channels/howestprime.movies.MovieDetailsChanged/messages/MovieDetailsChanged'
+
+  SaveBookingWhenBookingOpened:
+    action: receive
+    channel:
+      $ref: '#/channels/howestprime.movies.BookingOpened'
+    description: |
+      This operation is triggered when a new booking is opened.
+      It saves the booking information to the database.
+    messages:
+      - $ref: '#/channels/howestprime.movies.BookingOpened/messages/BookingOpened'
+
+  PaymentSuccess:
+    action: send
+    channel:
+      $ref: '#/channels/howestprime.ticketing.PaymentSuccess'
+    description: |
+      This operation is triggered when a payment is successful.
+      It sends a message to the ticketing system to confirm the payment.
+    messages:
+      - $ref: '#/channels/howestprime.ticketing.PaymentSuccess/messages/PaymentSuccess'
+
+  PaymentFailed:
+    action: send
+    channel:
+      $ref: '#/channels/howestprime.ticketing.PaymentFailed'
+    description: |
+      This operation is triggered when a payment fails.
+      It sends a message to the ticketing system to notify about the failure.
+    messages:
+      - $ref: '#/channels/howestprime.ticketing.PaymentFailed/messages/PaymentFailed'
+
+components:
+  messages:
+    MovieRegistered:
+      name: MovieRegistered
+      title: Movie registered
+      summary: |
+        This message is sent when a new movie is registered.
+      payload:
+        $ref: '#/components/schemas/MovieRegisteredPayload'
+    
+    MovieDetailsChanged:
+      name: MovieDetailsChanged
+      title: Movie details changed
+      summary: |
+        This message is sent when a new movie details are changed.
+      payload:
+        $ref: '#/components/schemas/MovieEvent'
+
+    BookingOpened:
+      name: BookingOpened
+      title: Booking opened
+      summary: |
+        This message is sent when a new booking is opened.
+      payload:
+        $ref: '#/components/schemas/BookingOpenedPayload'
+ 
+    PaymentSuccess: 
+      name: PaymentSuccess
+      title: Payment success
+      summary: |
+        This message is sent when a payment is successful.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PaymentPayload'
+
+    PaymentFailed: 
+      name: PaymentFailed
+      title: Payment failed
+      summary: |
+        This message is sent when a payment fails.
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PaymentPayload'
+
+  schemas:
+    MovieRegisteredPayload:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the movie.
+        title:
+          type: string
+          description: The title of the movie.
+        duration:
+          type: number
+          description: The duration of the movie in minutes.
+        genres:
+          type: array
+          items:
+            type: string
+          description: The list of genres for the movie.
+        poster:
+          type: string
+          description: The poster of the movie.
+      required:
+        - id
+        - title
+        - duration
+        - genres
+        - poster
+
+    MovieEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the movie.
+        title:
+          type: string
+          description: The title of the movie.
+        duration:
+          type: number
+          description: The duration of the movie in minutes.
+        genres:
+          type: array
+          items:
+            type: string
+          description: The list of genres for the movie.
+        poster:
+          type: string
+          description: The poster of the movie.
+      required:
+        - id
+        - title
+        - duration
+        - genres
+        - poster
+
+    BookingOpenedPayload:
+      type: object
+      properties:
+        bookingId:
+          type: string
+          description: Id of the booking.
+        movieId:
+          type: string
+          description: Id of the movie.
+        room:
+          type: string
+          description: Id of the room.
+        time:
+          type: string
+          format: date-time
+          description: Date and time of the event.
+        standardVisitors:
+          type: integer
+          description: Number of standard visitors.
+        discountedVisitors:
+          type: integer
+          description: Number of discounted visitors.
+        seatNumbers:
+          type: array
+          items:
+            type: string
+          description: List of reserved seat numbers.
+      required:
+        - bookingId
+        - movieId
+        - room
+        - time
+        - standardVisitors
+        - discountedVisitors
+        - seatNumbers
+
+    PaymentPayload:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          description: Id of the payment.
+        orderId:
+          type: string
+          description: Id of the order.
+        bookingId:
+          type: string
+          description: Id of the booking.
+      required:
+        - paymentId
+        - orderId
+        - bookingId

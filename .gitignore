@@ -1,0 +1,8 @@
+.env
+*.lcov
+cov_profile
+.scannerwork
+coverage
+.vscode
+/data
+.DS_Store

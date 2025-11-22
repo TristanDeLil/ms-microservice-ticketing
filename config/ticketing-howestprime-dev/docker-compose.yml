@@ -1,0 +1,65 @@
+services:
+  ticketing-db.howestprime.dev:
+    image: mongo
+    ports:
+      - 40131:5000
+    volumes:
+      - ../../data:/data/db
+    env_file:
+      - .ticketing-db.howestprime.dev.env
+    command: >
+      bash -c "
+        mongod --port 5000 --replSet rs0 --bind_ip_all &
+        until mongosh --port 5000 --eval 'print(\"waited for connection\")'
+        do
+          sleep 1
+        done
+        mongosh --port 5000 --eval 'rs.initiate({
+          _id: \"rs0\",
+          members: [{ _id: 0, host: \"ticketing-db.howestprime.dev:5000\" }]
+        })'
+        wait
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --port 5000 --eval 'db.adminCommand(\"ping\")'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+    restart: always
+    networks:
+      - howestprime-ticketing-dev
+
+  messagebroker.howestprime.dev:
+    image: cloudamqp/lavinmq
+    ports:
+      - "40100:5672"
+      - "40101:15672"
+    healthcheck:
+      test: ["CMD-SHELL", "lavinmqctl status | grep -q 'Uptime: ' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - howestprime-ticketing-dev
+  client-webapp.howestprime.dev:
+    image: howestprime.azurecr.io/howestprime-client-webapp:latest
+    ports:
+      - "10200:80"
+    env_file:
+      - .ticketing-db.howestprime.dev.env
+    networks:
+      - howestprime-ticketing-dev
+
+
+
+networks:
+  howestprime-ticketing-dev:
+    ipam:
+      config:
+        - subnet: 10.21.0.0/16
+
+volumes:
+  postgres:
