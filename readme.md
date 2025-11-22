@@ -1,10 +1,6 @@
 
 # Microservices - Ticketing
 
-Before proceeding, make sure to follow the **Project Build and Deploy** document for proper setup and deployment instructions. This document also contains the **analysis** and **deliverables** for the project. 
-
-The information below is additional technical details and guidance to help you understand and work with the MongoDB aggregation query.
-
 ```bash
 docker compose -f config/ticketing-howestprime-dev/docker-compose.yml up -d --remove-orphans
 ```
@@ -209,6 +205,3 @@ const result = await this._collection.aggregate<YOURDATADTO>(pipeline)
 
 
 ---
-
-Use this as a reference to build your own Order fetching queries with enriched movie data. 
-
